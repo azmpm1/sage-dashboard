@@ -43,57 +43,49 @@ Kategori terburuk (margin): ${stats.worstCategory.category} (${stats.worstCatego
 // ── Panggil LLM dan dapatkan insight ─────────────────────────
 async function getInsight(stats, focusQuestion = '') {
   const prompt = buildPrompt(stats, focusQuestion);
-
-  if (CONFIG.AI_PROVIDER === 'ollama') {
-    return await callOllama(prompt);
-  } else {
-    return await callGroq(prompt);
-  }
+  return await callGroq(prompt);
 }
 
 // ── Implementasi Groq ─────────────────────────────────────────
 async function callGroq(prompt) {
-  const res = await fetch(CONFIG.GROQ_URL, {
-    method:  'POST',
+
+  const res = await fetch('/api/chat', {
+    method: 'POST',
     headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: CONFIG.GROQ_MODEL,
+      model: 'llama-3.3-70b-versatile',
       messages: [
         {
-          role:    'system',
-          content: 'Kamu adalah analis bisnis yang memberi insight singkat, ' +
-                   'praktis, dan langsung ke poin. Gunakan Bahasa Indonesia.'
+          role: 'system',
+          content:
+            'Kamu adalah analis bisnis yang memberi insight singkat, praktis, dan langsung ke poin. Gunakan Bahasa Indonesia.'
         },
         {
-          role:    'user',
+          role: 'user',
           content: prompt
         }
       ],
-      max_tokens:  500,
+      max_tokens: 500,
       temperature: 0.3
     })
   });
 
   if (!res.ok) {
     const err = await res.json();
-    throw new Error(`Groq error: ${err.error?.message || res.status}`);
+    throw new Error(err.error || 'Groq request failed');
   }
-  const data = await res.json();
-  return data.choices[0].message.content;
-  // Groq (OpenAI-compatible) mengembalikan di choices[0].message.content
-}
 
+  const data = await res.json();
+
+  return data.choices[0].message.content;
+}
 // ── Fungsi baru: narrateAlert() ───────────────────────────────
 // Berbeda dari getInsight() yang umum, narrateAlert() fokus
 // pada satu anomali spesifik dan menghasilkan alert singkat
 async function narrateAlert(anomaly) {
   const prompt = buildAlertPrompt(anomaly);
-  if (CONFIG.AI_PROVIDER === 'ollama') {
-    return await callOllama(prompt);
-  }
   return await callGroq(prompt);
 }
 
@@ -163,6 +155,5 @@ Untuk setiap anomali, tulis satu kalimat alert dalam Bahasa Indonesia.
 Format untuk setiap baris: "• [nama/bulan]: [fakta mengejutkan] — [rekomendasi 1 kata kerja]"
 Urutkan dari yang paling kritis. Jangan preamble, langsung list.`;
 
-  if (CONFIG.AI_PROVIDER === 'ollama') return await callOllama(prompt);
   return await callGroq(prompt);
 }

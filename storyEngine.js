@@ -5,7 +5,6 @@
 // ── Fungsi utama: generate full story ─────────────────────────
 async function generateStory(summary, anomalies) {
   const prompt = buildStoryPrompt(summary, anomalies);
-  if (CONFIG.AI_PROVIDER === 'ollama') return await callOllama(prompt);
   return await callGroq(prompt);
 }
 
@@ -33,7 +32,6 @@ Contoh baik: "Margin Turun 3 Kuartal Berturut — Tables Jadi Penyebab Utama"
 Contoh buruk: "Dashboard Penjualan SAGE Q3 2024"
 JANGAN gunakan tanda kutip, JANGAN gunakan markdown dan JANGAN gunakan penjelasan tambahan.`;
 
-  if (CONFIG.AI_PROVIDER === 'ollama') return await callOllama(prompt);
   return await callGroq(prompt);
 }
 

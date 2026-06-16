@@ -209,10 +209,8 @@ function displaySummaryCards(stats) {
     .join('');
 
   // Tampilkan model yang aktif di badge
-  const modelName = CONFIG.AI_PROVIDER === 'ollama'
-    ? CONFIG.OLLAMA_MODEL
-    : CONFIG.GROQ_MODEL;
-  document.getElementById('model-badge').textContent = modelName;
+  const mb = document.getElementById('model-badge');
+  if (mb) mb.textContent = 'llama-3.3-70b-versatile';
 }
 
 // ── Render chart dengan anomaly highlight ─────────────────────
@@ -468,7 +466,7 @@ d3.csv('superstore.csv').then(async function(data) {
   dispatchDataReady(summaryStats);
 
   const mb = document.getElementById('model-badge');
-  if (mb) mb.textContent = CONFIG.AI_PROVIDER === 'ollama' ? CONFIG.OLLAMA_MODEL : CONFIG.GROQ_MODEL;
+  if (mb) mb.textContent = 'llama-3.3-70b-versatile';
 
   // == FASE 3: AI NARASI (paralel, tidak saling tunggu) ==
   Promise.allSettled([
