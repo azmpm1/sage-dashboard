@@ -1,0 +1,959 @@
+/*
+ * style.css
+ * AI-Augmented Dashboard — Superstore
+ * Digunakan oleh: P13 (insight), P14 (anomaly), P15 (capstone)
+ * (c) 2026 Kubela
+ */
+
+/* =============================================
+   RESET & BASE
+============================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:        #f8f9fb;
+  --surface:   #ffffff;
+  --surface2:  #f0f2f5;
+  --border:    #e2e5ea;
+  --text:      #1a1d23;
+  --muted:     #6b7280;
+  --subtle:    #9ca3af;
+
+  --blue:         #2563eb;
+  --blue-bg:      #eff6ff;
+  --blue-border:  #bfdbfe;
+  --green:        #16a34a;
+  --green-bg:     #f0fdf4;
+  --green-border: #bbf7d0;
+  --yellow:       #d97706;
+  --yellow-bg:    #fffbeb;
+  --yellow-border:#fde68a;
+  --red:          #dc2626;
+  --red-bg:       #fef2f2;
+  --red-border:   #fecaca;
+  --orange:       #ea580c;
+  --orange-bg:    #fff7ed;
+  --orange-border:#fed7aa;
+  --purple:       #7c3aed;
+  --purple-bg:    #f5f3ff;
+  --purple-border:#ddd6fe;
+
+  /* Warna semantis chart — gunakan konsisten di seluruh dashboard */
+  --color-normal:   #94a3b8;  /* abu: data normal/background */
+  --color-good:     #16a34a;  /* hijau: profit positif, target ok */
+  --color-warn:     #d97706;  /* kuning: perlu perhatian */
+  --color-severe:   #dc2626;  /* merah: anomali kritis */
+  --color-warning:  #ea580c;  /* oranye: anomali sedang */
+  --color-accent:   #2563eb;  /* biru: highlight utama, tren */
+  --color-highlight:#7c3aed;  /* ungu: secondary highlight */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* State: loading — body invisible sampai data siap */
+body.loading {
+  opacity: 0;
+}
+body:not(.loading) {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+/* =============================================
+   ZONE LAYOUT — 3 ZONA SCR
+   Setup (biru) | Conflict (merah) | Resolution (hijau)
+============================================= */
+.zone {
+  padding: 36px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.zone-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.zone-setup      { background: var(--surface); }
+.zone-conflict   { background: #fefefe; }
+.zone-resolution { background: var(--bg); }
+
+.zone-kicker {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+.zone-kicker.conflict   { color: var(--red); }
+.zone-kicker.resolution { color: var(--green); }
+
+.zone-header {
+  margin-bottom: 20px;
+}
+
+.zone-desc {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 680px;
+  line-height: 1.8;
+  margin-top: 6px;
+}
+
+/* =============================================
+   NARRATIVE TITLE (P15 Capstone)
+============================================= */
+.narrative-title-wrap {
+  margin-bottom: 24px;
+}
+
+#narrative-title {
+  font-size: clamp(20px, 2.8vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  color: var(--subtle);       /* abu saat masih loading */
+  margin-bottom: 8px;
+  transition: color 0.5s ease;
+}
+
+#narrative-title.loaded {
+  color: var(--text);         /* hitam setelah AI selesai */
+}
+
+.setup-text {
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 640px;
+  line-height: 1.8;
+  margin-bottom: 4px;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.2s;
+}
+
+.setup-text.ai-loaded {
+  opacity: 1;
+}
+
+/* =============================================
+   KPI CARDS
+============================================= */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.kpi-card {
+  padding: 16px 18px;
+  border-radius: 8px;
+  border: 1px solid;
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: default;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.kpi-blue   { background: var(--blue-bg);   border-color: var(--blue-border); }
+.kpi-green  { background: var(--green-bg);  border-color: var(--green-border); }
+.kpi-yellow { background: var(--yellow-bg); border-color: var(--yellow-border); }
+.kpi-red    { background: var(--red-bg);    border-color: var(--red-border); }
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.kpi-blue   .kpi-value { color: var(--blue); }
+.kpi-green  .kpi-value { color: var(--green); }
+.kpi-yellow .kpi-value { color: var(--yellow); }
+.kpi-red    .kpi-value { color: var(--red); }
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--subtle);
+}
+
+/* =============================================
+   CONFLICT GRID — Chart + Alert Panel
+============================================= */
+.conflict-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* =============================================
+   CHART CARDS
+============================================= */
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.chart-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.chart-card-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+/* Legend */
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.legend-dot.normal  { background: var(--color-normal); }
+.legend-dot.anomaly { background: var(--color-severe); }
+.legend-dot.good    { background: var(--color-good); }
+.legend-dot.accent  { background: var(--color-accent); }
+
+/* SVG default styles */
+.chart-card svg {
+  display: block;
+  overflow: visible;
+}
+
+/* =============================================
+   ALERT PANEL (P14 + P15)
+============================================= */
+.alert-panel {
+  background: var(--surface);
+  border: 1.5px solid var(--red-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ap-header {
+  background: var(--red-bg);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--red-border);
+  font-size: 13px;
+  font-weight: 700;
+  color: #991b1b;
+}
+
+.alert-count {
+  font-size: 11px;
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+}
+
+.alert-list {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.alert-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f9fafb;
+  transition: background 0.1s;
+}
+
+.alert-item-row:last-child { border-bottom: none; }
+.alert-item-row:hover { background: #fef2f2; margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
+
+.arow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.alert-item-row.severe  .arow-dot { background: var(--red); }
+.alert-item-row.warning .arow-dot { background: var(--orange); }
+.alert-item-row.info    .arow-dot { background: var(--blue); }
+
+.arow-text {
+  font-size: 11.5px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.6;
+}
+
+.no-alert {
+  font-size: 12px;
+  color: var(--subtle);
+  padding: 8px 0;
+  font-style: italic;
+}
+
+/* P14: Alert panel dengan tabs */
+.alert-panel-header {
+  background: var(--red-bg);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--red-border);
+  flex-wrap: wrap;
+}
+
+.aph-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.alert-icon    { font-size: 18px; }
+.alert-title   { font-size: 14px; font-weight: 700; color: #991b1b; }
+
+.severity-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.severity-badge.severe  { background: var(--red);    color: #fff; }
+.severity-badge.warning { background: var(--orange); color: #fff; }
+
+#btn-narrate {
+  background: #991b1b;
+  color: #fff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+#btn-narrate:hover    { background: var(--red); }
+#btn-narrate:disabled { background: var(--subtle); cursor: not-allowed; }
+
+.alert-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--red-border);
+  background: #fff7f7;
+}
+
+.alert-tab {
+  padding: 9px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.alert-tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+.alert-tab-content { padding: 14px 16px; }
+
+/* Narration output dalam tab AI */
+.narration-line {
+  padding: 7px 0;
+  font-size: 13px;
+  color: var(--text);
+  border-bottom: 1px solid #f3f4f6;
+  line-height: 1.7;
+}
+.narration-line:last-child { border-bottom: none; }
+
+/* =============================================
+   RESOLUTION GRID — Insight + Category Chart
+============================================= */
+.resolution-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* =============================================
+   INSIGHT PANEL (P13 + P15)
+============================================= */
+.insight-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ip-header {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface2);
+}
+
+/* P13: insight-output dengan textarea + tombol */
+.insight-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.insight-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+}
+
+.insight-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.model-badge {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.insight-input-wrap {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+.insight-input-wrap textarea,
+.insight-input-wrap input[type="text"] {
+  flex: 1;
+  padding: 10px 14px;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface2);
+  color: var(--text);
+  resize: none;
+  line-height: 1.6;
+}
+
+.insight-input-wrap textarea::placeholder,
+.insight-input-wrap input::placeholder {
+  color: var(--subtle);
+}
+
+.insight-input-wrap button {
+  padding: 10px 18px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.insight-input-wrap button:hover    { background: #1d4ed8; }
+.insight-input-wrap button:disabled { background: var(--subtle); cursor: not-allowed; }
+
+.insight-output {
+  padding: 14px 18px;
+  min-height: 120px;
+}
+
+.insight-line {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.8;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.insight-line:last-child { border-bottom: none; margin-bottom: 0; }
+
+.insight-point {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.8;
+  padding-left: 12px;
+  border-left: 2px solid var(--blue-border);
+  margin-bottom: 8px;
+}
+
+.insight-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  margin-top: 8px;
+}
+
+/* Quick question buttons */
+.quick-questions {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.qq-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.qbtn {
+  font-size: 11px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.qbtn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+
+/* =============================================
+   SUMMARY CARDS (P13 — bar di atas dashboard)
+============================================= */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  transition: box-shadow 0.15s;
+}
+.summary-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+.sc-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.sc-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #14b8a6;
+  line-height: 1.1;
+}
+
+/* =============================================
+   DASHBOARD HEADER & AI BADGE (P13)
+============================================= */
+.dash-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dash-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.dash-header .subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ai-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* =============================================
+   MAIN GRID (P13 — charts kiri, insight kanan)
+============================================= */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  padding: 24px 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.charts-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.insight-col { /* kanan — insight panel */ }
+
+/* =============================================
+   LOADING STATES
+============================================= */
+.insight-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.loading-text {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.spinner-inline {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Placeholder teks sebelum AI merespons */
+.insight-placeholder,
+.placeholder,
+.placeholder-text {
+  color: var(--subtle);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Error state */
+.insight-error,
+.err-p {
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--red);
+  line-height: 1.6;
+}
+
+/* =============================================
+   FOOTER
+============================================= */
+.dash-footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--subtle);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+@media (max-width: 900px) {
+  .conflict-grid,
+  .resolution-grid,
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-panel {
+    /* Di mobile, alert panel full width */
+  }
+}
+
+@media (max-width: 640px) {
+  .zone-inner  { padding: 0 16px; }
+  .dash-header { padding: 16px; }
+  .main-grid   { padding: 16px; }
+  .dash-footer { padding: 10px 16px; }
+
+  .kpi-row,
+  .summary-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #narrative-title {
+    font-size: 18px;
+  }
+}
+
+/* =============================================
+   P15 CAPSTONE ADDITIONS
+============================================= */
+
+/* Narrative title di zone setup */
+#narrative-title {
+  font-size: clamp(20px, 2.8vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  color: #94a3b8;
+  margin-bottom: 16px;
+  transition: color 0.5s ease;
+}
+#narrative-title.loaded {
+  color: #1a1d23;
+}
+
+/* Zone kicker warna per zona */
+.zone-kicker {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #14b8a6;
+  margin-bottom: 10px;
+}
+.zone-kicker.conflict   { color: #dc2626; }
+.zone-kicker.resolution { color: #16a34a; }
+
+/* Zone desc — teks dari LLM, fade in saat siap */
+.zone-desc {
+  font-size: 14px;
+  color: #6b7280;
+  max-width: 720px;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  min-height: 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.1s;
+}
+.zone-desc.ai-loaded {
+  opacity: 1;
+}
+
+/* Zone layout */
+.zone {
+  padding: 36px 0;
+  border-bottom: 1px solid #e2e5ea;
+}
+.zone-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.zone-setup      { background: #ffffff; }
+.zone-conflict   { background: #fefefe; }
+.zone-resolution { background: #f8f9fb; }
+
+/* Conflict charts grid: subcat wide kiri, 2 chart kanan */
+.conflict-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr;
+  gap: 16px;
+  align-items: start;
+}
+.chart-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+/* SVG responsive di dalam chart-card */
+.chart-card svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Resolution grid */
+.resolution-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* Alert item style (dipakai di renderRawAnomalies) */
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.alert-item:last-child { border-bottom: none; }
+.ai-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.ai-dot.severe  { background: #dc2626; }
+.ai-dot.warning { background: #ea580c; }
+.ai-dot.info    { background: #2563eb; }
+.ai-label  { font-size: 13px; font-weight: 600; color: #374151; }
+.ai-detail { font-size: 11px; color: #6b7280; margin-top: 2px;
+             font-family: 'JetBrains Mono', monospace; line-height: 1.6; }
+
+/* Narration line */
+.narration-line {
+  padding: 8px 0;
+  font-size: 13px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  line-height: 1.7;
+}
+.narration-line:last-child { border-bottom: none; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .conflict-charts-grid,
+  .resolution-grid { grid-template-columns: 1fr; }
+  .zone-inner { padding: 0 16px; }
+}
+
+/* ── Insight output formatting ──────────────────────────────── */
+.insight-item {
+  font-size: 13px; font-weight: 600; color: #1a1d23;
+  padding: 10px 0 4px; border-top: 1px solid #e2e5ea;
+  line-height: 1.5;
+}
+.insight-item:first-child { border-top: none; padding-top: 4px; }
+
+.insight-bullet {
+  font-size: 13px; color: #374151; line-height: 1.7;
+  padding: 3px 0 3px 14px;
+}
+
+.insight-line {
+  font-size: 13px; color: #6b7280; line-height: 1.8;
+  padding: 4px 0;
+}
+
+.insight-gap { height: 6px; }

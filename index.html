@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAGE Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <style>
+    /* TAB BAR */
+    .tab-bar {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: #0f172a;
+    display: flex;
+    align-items: stretch;
+    border-bottom: 2px solid #134e4a;
+    padding: 0 32px;
+    gap: 0;
+    }
+
+    .tab-bar-brand {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #14b8a6;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    padding-right: 24px;
+    border-right: 1px solid #134e4a;
+    margin-right: 8px;
+    white-space: nowrap;
+    }
+
+    .tab-btn {
+    padding: 14px 22px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+    color: #e2e8f0;
+    }
+
+    .tab-btn.active {
+    color: #ffffff;
+    border-bottom-color: #14b8a6;
+    }
+
+    .tab-btn.active.tab-tableau {
+    border-bottom-color: #f59e0b;
+    color: #f59e0b;
+    }
+
+    .tab-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #1e293b;
+    color: #94a3b8;
+    }
+
+    .tab-btn.active .tab-badge {
+    background: #14b8a6;
+    color: #ffffff;
+    }
+
+    .tab-btn.active.tab-tableau .tab-badge {
+    background: #f59e0b;
+    color: #ffffff;
+    }
+
+    .tableau-link {
+        font-size: 12px;
+        color: #f59e0b;
+        text-decoration: none;
+        border: 1px solid #f59e0b;
+        padding: 6px 14px;
+        border-radius: 6px;
+        transition: all .15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .tableau-link:hover {
+    background: #f59e0b;
+    color: #ffffff;
+    }
+    #panel-ai      { display: block; }
+    #panel-tableau { display: none; background: #f0f2f5; }
+    .tableau-wrap {
+      max-width: 1200px; margin: 0 auto; padding: 24px 32px 40px;
+    }
+    .tableau-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .tableau-header h2 { font-size: 16px; font-weight: 700; color: #1a1d23; }
+    .tableau-header p  { font-size: 13px; color: #6b7280; margin-top: 3px; }
+    .tableau-link {
+        font-size: 12px;
+        color: #f59e0b;
+        text-decoration: none;
+        border: 1px solid #f59e0b;
+        padding: 6px 14px;
+        border-radius: 6px;
+        transition: all .15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .tableau-link:hover {
+        background: #f59e0b;
+        color: #ffffff;
+    }
+    .tableau-iframe-wrap {
+      background: #fff; border: 1px solid #e2e5ea;
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .tableau-iframe-wrap iframe { width: 100%; border: none; display: block; min-height: 720px; }
+    .tableau-note { margin-top: 12px; font-size: 11px; color: #9ca3af; text-align: center; }
+  </style>
+</head>
+<body>
+
+<!-- TAB BAR — paling atas, sticky -->
+<nav class="tab-bar">
+  <div class="tab-bar-brand">SAGE</div>
+  <button class="tab-btn active" id="tab-ai" onclick="switchTab('ai')">
+    &#x1F916; AI Dashboard
+    <span class="tab-badge">D3 + LLM</span>
+  </button>
+  <button class="tab-btn tab-tableau" id="tab-tableau" onclick="switchTab('tableau')">
+    &#x1F4CA; Tableau
+    <span class="tab-badge">Tableau Public</span>
+  </button>
+</nav>
+
+<!-- PANEL TABLEAU -->
+<div id="panel-tableau">
+  <div class="tableau-wrap">
+    <div class="tableau-header">
+      <div>
+        <h2>Dashboard SAGE — Tableau Public</h2>
+        <p>Visualisasi interaktif dengan filter, drill-down, dan tooltip. Klik elemen chart untuk cross-filter.</p>
+      </div>
+      <a class="tableau-link"
+         href="https://public.tableau.com/views/EAS-DataVisualisasi/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
+         target="_blank" rel="noopener">
+        Buka di Tableau Public &#x2197;
+      </a>
+    </div>
+    <div class="tableau-iframe-wrap">
+      <iframe
+        id="tableau-iframe"
+        src=""
+        data-src="https://public.tableau.com/views/EAS-DataVisualisasi/Dashboard1?:showVizHome=no"
+        allowfullscreen
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox">
+      </iframe>
+    </div>
+    <p class="tableau-note">
+      Dashboard dibuat dengan Tableau Public &nbsp;·&nbsp; Dataset: SAGE &nbsp;·&nbsp;
+      Gunakan filter di atas untuk eksplorasi interaktif
+    </p>
+  </div>
+</div>
+
+<!-- PANEL AI DASHBOARD -->
+<div id="panel-ai">
+
+<!-- ============================================================
+     ZONA 1 — SETUP: Hook + KPI + Context
+============================================================ -->
+<section class="zone zone-setup">
+  <div class="zone-inner">
+
+    <div class="zone-kicker">SAGE · Sales Analytics & Generative AI Engine</div>
+
+    <!-- Judul naratif — diisi oleh generateTitle() -->
+    <h1 id="narrative-title">Memuat analisis data...</h1>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" id="summary-cards"></div>
+
+    <!-- Teks konteks setup dari LLM -->
+    <p id="setup-text" class="zone-desc"></p>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     ZONA 2 — CONFLICT: Alert + Charts
+============================================================ -->
+<section class="zone zone-conflict">
+  <div class="zone-inner">
+
+    <div class="zone-kicker conflict">Conflict &nbsp;·&nbsp; Anomali Terdeteksi</div>
+    <p id="conflict-text" class="zone-desc"></p>
+
+    <!-- Alert Panel -->
+    <div class="alert-panel" id="alert-panel" style="margin-bottom:16px;">
+      <div class="alert-panel-header">
+        <div class="aph-left">
+          <span class="alert-icon">🚨</span>
+          <span class="alert-title">Anomali Terdeteksi</span>
+          <span class="severity-badge severe"  id="badge-severe">0 Kritis</span>
+          <span class="severity-badge warning" id="badge-warning">0 Peringatan</span>
+        </div>
+        <button id="btn-narrate" onclick="requestAlertNarration()">🤖 Narasi AI</button>
+      </div>
+      <div class="alert-tabs">
+        <button class="alert-tab active" onclick="switchAlertTab('raw', this)">Data Anomali</button>
+        <button class="alert-tab"        onclick="switchAlertTab('ai',  this)">Narasi AI</button>
+      </div>
+      <div id="alert-tab-raw" class="alert-tab-content"></div>
+      <div id="alert-tab-ai"  class="alert-tab-content" style="display:none">
+        <div id="ai-narration-output">
+          <p class="placeholder-text">Klik "Narasi AI" untuk penjelasan dari LLM.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="conflict-charts-grid">
+
+      <!-- Chart subcat dengan anomaly highlight — utama -->
+    <div class="chart-side-col">
+        <div class="chart-card">
+            <div class="chart-card-title" id="chart-title-subcat">
+            Profit Margin per Sub-Kategori
+            </div>
+            <div class="chart-legend">
+            <span class="legend-dot normal"></span> Normal
+            <span class="legend-dot anomaly" style="margin-left:12px;"></span> Anomali
+            </div>
+            <div id="chart-subcat"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Hubungan Sales dan Profit</div>
+          <div id="chart-scatter"></div>
+        </div>
+    </div>
+
+      <!-- Charts kanan: kategori + region -->
+      <div class="chart-side-col">
+        <div class="chart-card">
+            <div class="chart-card-title">
+                Tren Sales per Bulan
+            </div>
+            <div id="chart-trend"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Profit per Region</div>
+          <div id="chart-region"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     ZONA 3 — RESOLUTION: Insight + Rekomendasi
+============================================================ -->
+<section class="zone zone-resolution">
+  <div class="zone-inner">
+
+    <div class="zone-kicker resolution">Resolution &nbsp;·&nbsp; Insight &amp; Rekomendasi</div>
+    <p id="resolution-text" class="zone-desc"></p>
+
+    <div class="resolution-grid">
+
+      <!-- Insight panel (dari P13) -->
+      <div class="insight-card">
+        <div class="insight-header">
+          <h3>🤖 AI Insight</h3>
+          <span class="model-badge" id="model-badge"></span>
+        </div>
+        <div id="insight-output" class="insight-output">
+          <p class="insight-placeholder">Memuat insight dari AI...</p>
+        </div>
+        <!-- Custom question -->
+        <div class="insight-input-wrap">
+          <textarea id="custom-question"
+            placeholder="Tanya sesuatu tentang data ini..."
+            rows="2"></textarea>
+          <button id="btn-insight" onclick="requestInsight()">
+            Minta Insight →
+          </button>
+        </div>
+        <!-- Quick questions -->
+        <div class="quick-questions">
+          <p class="qq-label">Cepat:</p>
+          <button class="qbtn" onclick="quickAsk('Kategori mana yang harus diprioritaskan untuk meningkatkan profit?')">Prioritas profit?</button>
+          <button class="qbtn" onclick="quickAsk('Region mana yang perlu perhatian khusus?')">Masalah region?</button>
+          <button class="qbtn" onclick="quickAsk('Apa rekomendasi konkret untuk 3 bulan ke depan?')">Rekomendasi?</button>
+        </div>
+      </div>
+
+      <!-- Summary statistik -->
+      <div class="chart-card">
+        <div class="chart-card-title">Ringkasan Performa per Kategori</div>
+        <div id="category-table" style="padding-top:8px;"></div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+</div><!-- /panel-ai -->
+
+<footer class="dash-footer">
+  <span>Dataset: SAGE &nbsp;·&nbsp; Powered by D3.js + AI</span>
+  <span id="footer-note" style="font-size:11px;color:#9ca3af;">Model: <span id="footer-model"></span></span>
+</footer>
+
+<!-- Urutan script: config → aiInsight → anomalyDetector → storyEngine → app -->
+<script src="config.js"></script>
+<script src="aiInsight.js"></script>
+<script src="anomalyDetector.js"></script>
+<script src="storyEngine.js"></script>
+<script src="app.js"></script>
+
+<script>
+// Render tabel ringkasan kategori di resolution zone
+// Dipanggil setelah data dimuat (hook dari window load event)
+window.addEventListener('capstone-data-ready', function(e) {
+  const stats = e.detail;
+  const el = document.getElementById('category-table');
+  if (!el || !stats) return;
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr style="border-bottom:1px solid #e2e5ea;">
+          <th style="text-align:left;padding:6px 8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Kategori</th>
+          <th style="text-align:right;padding:6px 8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Sales</th>
+          <th style="text-align:right;padding:6px 8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Profit</th>
+          <th style="text-align:right;padding:6px 8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Margin</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${stats.categories.map(c => `
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px;">${c.category}</td>
+            <td style="padding:8px;text-align:right;color:#2563eb;">$${(c.sales/1000).toFixed(1)}K</td>
+            <td style="padding:8px;text-align:right;color:${c.profit>=0?'#16a34a':'#dc2626'};">$${(c.profit/1000).toFixed(1)}K</td>
+            <td style="padding:8px;text-align:right;font-weight:700;color:${+c.margin>=15?'#16a34a':+c.margin>=5?'#d97706':'#dc2626'};">${c.margin}%</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  // Update footer model
+  const fm = document.getElementById('footer-model');
+  if (mb) mb.textContent = 'llama-3.1-8b-instant';
+});
+</script>
+
+<script>
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(tab) {
+  // Update tombol
+  document.getElementById('tab-ai').classList.toggle('active', tab === 'ai');
+  document.getElementById('tab-tableau').classList.toggle('active', tab === 'tableau');
+
+  // Toggle panel
+  document.getElementById('panel-ai').style.display      = tab === 'ai'      ? 'block' : 'none';
+  document.getElementById('panel-tableau').style.display = tab === 'tableau' ? 'block' : 'none';
+
+  // Lazy load iframe Tableau — hanya load saat tab diklik pertama kali
+  if (tab === 'tableau') {
+    const iframe = document.getElementById('tableau-iframe');
+    if (!iframe.src || iframe.src === window.location.href) {
+      iframe.src = iframe.getAttribute('data-src');
+    }
+  }
+}
+</script>
+</body>
+</html>
